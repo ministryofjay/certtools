@@ -4,8 +4,6 @@ import "./public/css/cui-standard.min.css";
 import Tool1 from "./Tool1";
 import Tool2 from "./Tool2";
 
-const forge = require("node-forge");
-
 function App() {
   const tabs = [
     { name: "Tool1", component: <Tool1></Tool1> },
