@@ -1,63 +1,63 @@
-import React from "react";
+import React, { useState } from "react";
 import "./App.css";
 import "./public/css/cui-standard.min.css";
+import Tool1 from "./Tool1";
+import Tool2 from "./Tool2";
+
 const forge = require("node-forge");
 
 function App() {
-  const a = 100;
-  const b = forge;
-  const c = 200;
+  const tabs = [
+    { name: "Tool1", component: <Tool1></Tool1> },
+    { name: "Tool2", component: <Tool2></Tool2> },
+  ];
+  const [currentTab, setCurrentTab] = useState<string>(tabs[0].name);
+
   return (
     <div>
       <header className="header">
-        <div className="container">
+        <div className="container-fluid">
           <div className="header-panels">
             <div className="header-panel">
-              <a
-                className="header__logo"
-                href="http://www.cisco.com"
-                target="_blank"
-              >
-                <span className="icon-cisco"></span>
-              </a>
               <div className="header__title">Your App Title</div>
             </div>
             <div className="header-panel header-panel--right">
               <a className="header-item">Link 1</a>
-              <a className="header-item">Link 2</a>
-              <a className="header-item">Link 3</a>
             </div>
           </div>
         </div>
       </header>
-      <div className="row dbl-padding-bottom">
-        <div className="col-lg-6 col-xl-4 base-padding-bottom">
-          <div className="subheader">Basic</div>
-          <nav className="sidebar" role="navigation">
+      <div className="content content--alt">
+        <div className="row">
+          <nav className="sidebar col-2" role="navigation">
             <div className="sidebar__header">
               <div className="sidebar__header-title">Title Area</div>
             </div>
             <ul>
-              <li className="sidebar__item">
-                <a tabIndex={0}>Home</a>
-              </li>
-              <li className="sidebar__item">
-                <a tabIndex={1}>Alerts</a>
-              </li>
-              <li className="sidebar__item">
-                <a tabIndex={2}>Charts</a>
-              </li>
-              <li className="sidebar__item">
-                <a tabIndex={3}>Devices</a>
-              </li>
-              <li className="sidebar__item">
-                <a tabIndex={4}>Settings</a>
-              </li>
-              <li className="sidebar__item">
-                <a tabIndex={5}>Help</a>
-              </li>
+              {tabs.map((tab, index) => {
+                return (
+                  <li key={index} className="sidebar__item">
+                    <a
+                      href="#"
+                      tabIndex={index}
+                      onClick={() => setCurrentTab(tab.name)}
+                    >
+                      {tab.name}
+                    </a>
+                  </li>
+                );
+              })}
             </ul>
           </nav>
+          <div className="col-10">
+            <div className="panel">
+              {tabs
+                .filter(({ name }) => {
+                  return name === currentTab;
+                })
+                .map(({ component }) => component)}
+            </div>
+          </div>
         </div>
       </div>
     </div>
