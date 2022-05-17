@@ -2198,10 +2198,10 @@
     "@typescript-eslint/types" "5.23.0"
     eslint-visitor-keys "^3.0.0"
 
-"@vkumov/react-cui-2.0@^4.4.0":
-  version "4.4.0"
-  resolved "https://registry.yarnpkg.com/@vkumov/react-cui-2.0/-/react-cui-2.0-4.4.0.tgz#273c6638e4ab49038134aa26d5df1999c8c4ad65"
-  integrity sha512-CM5eGg33rcu67Hid74GjrCi5wEc89ATdrbv4JPaMwXuUMYvGw3XAEW+PZJj8M5XLaGq9OXupqkwAFodAuHuUfQ==
+"@vkumov/react-cui-2.0@^4.5.1":
+  version "4.5.1"
+  resolved "https://registry.yarnpkg.com/@vkumov/react-cui-2.0/-/react-cui-2.0-4.5.1.tgz#7bfd20c26598f39d2db6e70aa53f97ba47054ed3"
+  integrity sha512-aRbungePciiL0Xjmf0vUS3E3ozC9lJ+HeK/KymbybKWbaJloEVAIZOvQe5gw4THbRr63PxiZzKEn61YMn0jS+g==
   dependencies:
     bytes "^3.1.2"
     eventemitter3 "^4.0.7"

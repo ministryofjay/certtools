@@ -225,19 +225,19 @@ function Tool1() {
       <div className="row">
         <div className="col-2">
           <div className="panel">
-            {/*
-            <Radios
-              name="inputType"
-              value="PEM"
-              values={[
-                { value: "PEM", label: "PEM" },
-                { value: "DER", label: "DER" },
-              ]}
-              onChange={(value: string) => {
-                setInputType(value);
-              }}
-            ></Radios>
-            */}
+            {
+              <Radios
+                name="inputType"
+                value={inputType}
+                values={[
+                  { value: "PEM", label: "PEM" },
+                  { value: "DER", label: "DER" },
+                ]}
+                onChange={(value: string) => {
+                  setInputType(value);
+                }}
+              ></Radios>
+            }
           </div>
         </div>
         <div className="col-10">
