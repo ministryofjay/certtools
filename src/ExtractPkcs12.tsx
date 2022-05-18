@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from "react";
 
 import { Radios } from "@vkumov/react-cui-2.0";
+import Cert from "./Cert";
 
-const forge = require("node-forge");
+import * as forge from "node-forge";
 
 const examplePkcs12Pem = `
 -----BEGIN PKCS12-----
@@ -133,14 +134,17 @@ Blnl9YxnnqYuRF1HFgQI+rXFej+yTooCAggA
 const processPkcs12 = (inputBytes: string, password: string) => {
   const p12Asn1 = forge.asn1.fromDer(inputBytes);
   const p12 = forge.pkcs12.pkcs12FromAsn1(p12Asn1, password);
-  const privateKeyBags = p12.getBags({
+  const keyBags = p12.getBags({
     bagType: forge.pki.oids.pkcs8ShroudedKeyBag,
   });
-  if (privateKeyBags[forge.pki.oids.pkcs8ShroudedKeyBag].length !== 1) {
+  const privateKeyBags = keyBags[
+    forge.pki.oids.pkcs8ShroudedKeyBag
+  ] as forge.pkcs12.Bag[];
+  if (privateKeyBags.length !== 1) {
     throw new Error("No private key found in the pkcs12");
   }
-  const privateKey = privateKeyBags[forge.pki.oids.pkcs8ShroudedKeyBag][0];
-  const privateKeyPem = forge.pki.privateKeyToPem(privateKey.key);
+  const privateKey = privateKeyBags[0].key as forge.pki.PrivateKey;
+  const privateKeyPem = forge.pki.privateKeyToPem(privateKey);
   const certificateChainBags = p12.getBags({
     bagType: forge.pki.oids.certBag,
   });
@@ -148,7 +152,10 @@ const processPkcs12 = (inputBytes: string, password: string) => {
   const certHashes = new Set();
   // Some PKCS12 have the leaf (identity) cert twice in the chain
   // Filter out the duplicate certificates
-  const certificateChain = certificateChainBags[forge.pki.oids.certBag]
+  const certBags = certificateChainBags[
+    forge.pki.oids.certBag
+  ] as forge.pkcs12.Bag[];
+  const certificateChain = certBags
     .map((bag: any) => bag.cert)
     .filter((certObj: any) => {
       const certDer = forge.asn1
@@ -163,14 +170,11 @@ const processPkcs12 = (inputBytes: string, password: string) => {
         certHashes.add(certShaHash);
         return true;
       }
-    })
-    .map((certObj: any) => {
-      return { pem: forge.pki.certificateToPem(certObj), certObj: certObj };
     });
   return { privateKey: privateKeyPem, certificateChain: certificateChain };
 };
 
-function Tool1() {
+function ExtractPkcs12Tool() {
   const [inputType, setInputType] = useState<string>("PEM");
 
   const [inputPassword, setInputPassword] = useState<string>("Cisco123");
@@ -182,7 +186,7 @@ function Tool1() {
 
   const [privateKey, setPrivateKey] = useState<string>("");
   const [certificateChain, setCertificateChain] = useState<
-    { pem: string; certObj: any }[]
+    forge.pki.Certificate[]
   >([]);
 
   const processInputPkcs12Pem = (
@@ -198,7 +202,10 @@ function Tool1() {
       console.log("Woot");
       setInputPkcs12PemErrorText("");
       // Get just pure base64 string
-      const p12B64 = validInput?.groups?.b64String.replace(/[\s\n]*/g, "");
+      const p12B64 = validInput?.groups?.b64String.replace(
+        /[\s\n]*/g,
+        ""
+      ) as string;
       setInputPkcs12Bytes(forge.util.decode64(p12B64));
     } else {
       setInputPkcs12PemErrorText("Invalid PKCS12");
@@ -291,17 +298,10 @@ function Tool1() {
         </div>
       </div>
       {certificateChain.map((cert, idx) => {
-        return (
-          <div className="row" key={idx}>
-            <div className="col-6">Stuff</div>
-            <div className="col-6">
-              <pre>{cert.pem}</pre>
-            </div>
-          </div>
-        );
+        return <Cert certObj={cert} key={idx}></Cert>;
       })}
     </div>
   );
 }
 
-export default Tool1;
+export default ExtractPkcs12Tool;
