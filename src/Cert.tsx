@@ -4,6 +4,8 @@ import * as forge from "node-forge";
 
 import { Panel } from "@vkumov/react-cui-2.0";
 
+import { Buffer } from "buffer";
+
 interface IForgeCertificate extends forge.pki.Certificate {
   signatureOid: string;
 }
@@ -52,13 +54,30 @@ function Cert(props: ICert) {
   const subjectName = decodeDistinguishedName(certObj.subject.attributes);
   const issuerName = decodeDistinguishedName(certObj.issuer.attributes);
   const signatureType = signatureOidMap[certObj.signatureOid];
-  let publicKey = "?";
-  /*const pKey = certObj.publicKey as forge.pki.rsa.PublicKey;
-  if (pKey.e && pKey.n) {
+  let publicKeyInfo = {} as { n?: string; e?: string; nSize?: number };
+  let publicKeyType = "";
+  if (certObj.publicKey.hasOwnProperty("n")) {
     // This is likely an RSA key
-    const eKey = Buffer.from(pKey.e.toByteArray());
-    publicKey = eKey.toString("hex");
-  }*/
+    publicKeyType = "rsa";
+    publicKeyInfo.n = "";
+    const pKey = certObj.publicKey as forge.pki.rsa.PublicKey;
+    publicKeyInfo.nSize = pKey.n.bitLength();
+    const nKey = Buffer.from(pKey.n.toByteArray())
+      .toString("hex")
+      .toUpperCase();
+    for (let i = 0; i < nKey.length; i++) {
+      if (i % 2 === 0 && i > 0) {
+        publicKeyInfo.n += ":";
+      }
+      if (i % 30 === 0 && i > 0) {
+        publicKeyInfo.n += "\n";
+      }
+      publicKeyInfo.n += nKey[i];
+    }
+    publicKeyInfo.e = pKey.e.toString();
+  }
+
+  const b = 100;
 
   return (
     <>
@@ -68,15 +87,30 @@ function Cert(props: ICert) {
             <div className="row">
               <div className="col">
                 <ul>
-                  <li>Serial #: {props.certObj.serialNumber}</li>
+                  <li>
+                    Serial #:{" "}
+                    <span style={{ fontFamily: "monospace" }}>
+                      {props.certObj.serialNumber.toUpperCase()}
+                    </span>
+                  </li>
                   <li>Signature Type: {signatureType}</li>
                   <li>Subject: {subjectName}</li>
                   <li>Issuer: {issuerName}</li>
                   <li>Valid From: {certObj.validity.notBefore.toString()}</li>
                   <li>Valid To: {certObj.validity.notAfter.toString()}</li>
                   <li>
-                    Public Key:
-                    {publicKey}
+                    <p>Public Key:</p>
+                    {publicKeyType === "rsa" && (
+                      <ul>
+                        <li>Key Size: {publicKeyInfo.nSize}</li>
+                        <li>Modulus</li>
+                        <li>
+                          <pre>{publicKeyInfo.n}</pre>
+                        </li>
+                        <li>Exponent {publicKeyInfo.e}</li>
+                        <li></li>
+                      </ul>
+                    )}
                   </li>
                 </ul>
               </div>
