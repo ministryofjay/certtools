@@ -5,6 +5,7 @@ import * as forge from "node-forge";
 import { Panel } from "@vkumov/react-cui-2.0";
 
 import { Buffer } from "buffer";
+import CertificateExtension from "./CertExtension";
 
 interface IForgeCertificate extends forge.pki.Certificate {
   signatureOid: string;
@@ -77,8 +78,6 @@ function Cert(props: ICert) {
     publicKeyInfo.e = pKey.e.toString();
   }
 
-  const b = 100;
-
   return (
     <>
       <div className="row qtr-margin-top">
@@ -111,6 +110,21 @@ function Cert(props: ICert) {
                         <li></li>
                       </ul>
                     )}
+                  </li>
+                  <li>
+                    <p>Extensions:</p>
+                    <ul>
+                      {certObj.extensions.map((extension, idx) => {
+                        return (
+                          <li>
+                            <CertificateExtension
+                              extension={extension}
+                              key={idx}
+                            ></CertificateExtension>
+                          </li>
+                        );
+                      })}
+                    </ul>
                   </li>
                 </ul>
               </div>
