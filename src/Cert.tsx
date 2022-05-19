@@ -82,38 +82,60 @@ function Cert(props: ICert) {
     <>
       <div className="row qtr-margin-top">
         <div className="col">
-          <Panel color="light" raised={true} padding="loose">
+          <Panel color="plain" raised={true} padding="loose">
             <div className="row">
               <div className="col">
-                <ul>
+                <h3>x509 v3 Certificate</h3>
+              </div>
+            </div>
+            <div className="row">
+              <div className="col">
+                <ul style={{ listStyleType: "none" }}>
                   <li>
-                    Serial #:{" "}
+                    <b>Serial #: </b>
                     <span style={{ fontFamily: "monospace" }}>
                       {props.certObj.serialNumber.toUpperCase()}
                     </span>
                   </li>
-                  <li>Signature Type: {signatureType}</li>
-                  <li>Subject: {subjectName}</li>
-                  <li>Issuer: {issuerName}</li>
-                  <li>Valid From: {certObj.validity.notBefore.toString()}</li>
-                  <li>Valid To: {certObj.validity.notAfter.toString()}</li>
                   <li>
-                    <p>Public Key:</p>
+                    <b>Signature Type: </b>
+                    {signatureType}
+                  </li>
+                  <li>
+                    <b>Subject: </b>
+                    {subjectName}
+                  </li>
+                  <li>
+                    <b>Issuer: </b>
+                    {issuerName}
+                  </li>
+                  <li>
+                    <b>Valid From: </b>
+                    {certObj.validity.notBefore.toString()}
+                  </li>
+                  <li>
+                    <b>Valid To: </b>
+                    {certObj.validity.notAfter.toString()}
+                  </li>
+                  <li>
+                    <b>Public Key: </b>
                     {publicKeyType === "rsa" && (
-                      <ul>
+                      <ul style={{ listStyleType: "none" }}>
                         <li>Key Size: {publicKeyInfo.nSize}</li>
-                        <li>Modulus</li>
+                        <li>Modulus:</li>
                         <li>
-                          <pre>{publicKeyInfo.n}</pre>
+                          <pre className="qtr-margin-left">
+                            {publicKeyInfo.n}
+                          </pre>
                         </li>
-                        <li>Exponent {publicKeyInfo.e}</li>
+                        <li>Exponent: {publicKeyInfo.e}</li>
                         <li></li>
                       </ul>
                     )}
                   </li>
                   <li>
-                    <p>Extensions:</p>
-                    <ul>
+                    <b>Extensions:</b>
+                    <ul style={{ listStyleType: "none" }}>
                       {certObj.extensions.map((extension, idx) => {
                         return (
                           <li>
@@ -129,7 +151,9 @@ function Cert(props: ICert) {
                 </ul>
               </div>
               <div className="col">
-                <pre>{certPem}</pre>
+                <Panel well={true} color="light">
+                  <pre>{certPem}</pre>
+                </Panel>
               </div>
             </div>
           </Panel>

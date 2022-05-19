@@ -15,6 +15,15 @@ interface ICertificateExtension {
 }
 
 function CertificateExtension(props: ICertificateExtension) {
+  switch (props.extension.id) {
+    case "1.3.6.1.4.1.311.20.2":
+      props.extension.name = "certEnrollmentType";
+      break;
+    case "1.3.6.1.4.1.311.21.1":
+      props.extension.name = "msCertificateServicesCaVersion";
+      break;
+  }
+
   switch (props.extension.name) {
     case "keyUsage":
       return (
@@ -52,6 +61,30 @@ function CertificateExtension(props: ICertificateExtension) {
           {...props.extension}
         ></CertificateExtensionAuthorityInfoAccess>
       );
+    case "certEnrollmentType":
+      return (
+        <CertificateExtensionEnrollmentCertType
+          {...props.extension}
+        ></CertificateExtensionEnrollmentCertType>
+      );
+    case "extKeyUsage":
+      return (
+        <CertificateExtensionExtendedKeyUsage
+          {...props.extension}
+        ></CertificateExtensionExtendedKeyUsage>
+      );
+    case "basicConstraints":
+      return (
+        <CertificateExtensionBasicConstraints
+          {...(props.extension as ICertificateExtensionBasicConstraints)}
+        ></CertificateExtensionBasicConstraints>
+      );
+    case "msCertificateServicesCaVersion":
+      return (
+        <CertificateExtensionMsCertificateServicesCaVersion
+          {...props.extension}
+        ></CertificateExtensionMsCertificateServicesCaVersion>
+      );
     default:
       return (
         <>
@@ -82,7 +115,7 @@ function CertificateExtensionKeyUsage(props: ICertificateExtensionKeyUsage) {
         )
         .filter((value) => value[1])
         .map((value, index) => (
-          <Label size="small" key={index} className="qtr-margin-left">
+          <Label size="tiny" key={index} className="qtr-margin-left">
             {value[0]}
           </Label>
         ))}
@@ -100,11 +133,13 @@ function CertificateExtensionSubjectAltName(
   return (
     <div>
       <span>Subject Alternate Name:</span>
-      <ul>
+      <ul style={{ listStyleType: "none" }}>
         {props.altNames.map((altName, index) => {
           return (
             <li key={index}>
-              {altName.type === 2 ? "DNS" : "?"} - {altName.value}
+              <span style={{ fontFamily: "monospace" }}>
+                {altName.type === 2 ? "DNS" : "?"}: {altName.value}
+              </span>
             </li>
           );
         })}
@@ -130,14 +165,6 @@ function CertificateExtensionSubjectKeyIdentifier(
   );
 }
 
-interface IAiaASN1KeyId {
-  composed: boolean;
-  constructed: boolean;
-  tagClass: number;
-  type: number;
-  value: string;
-}
-
 interface IAsn1Object {
   composed: boolean;
   constructed: boolean;
@@ -151,9 +178,9 @@ function CertificateExtensionAuthorityKeyIdentifier(
 ) {
   let keyId = "";
   const asn1Blob = forge.asn1.fromDer(props.value);
-  const asn1Object = asn1Blob.value[0] as IAiaASN1KeyId;
+  const asn1Object = asn1Blob.value[0] as IAsn1Object;
   if (asn1Object.type === 0) {
-    const sha1Hash = asn1Object.value;
+    const sha1Hash = asn1Object.value as string;
     const hexString = forge.util.bytesToHex(sha1Hash).toUpperCase();
     keyId = hexString.match(/.{2}/g)?.join(":") as string;
   }
@@ -179,8 +206,8 @@ function CertificateExtensionCrlDistributionPoints(
 
   return (
     <div>
-      <p>CRL Distribution Points:</p>
-      <ul>
+      CRL Distribution Points:
+      <ul style={{ listStyleType: "none" }}>
         {uris.map((uri, index) => {
           return (
             <li key={index}>
@@ -219,7 +246,7 @@ function CertificateExtensionAuthorityInfoAccess(
         case 2:
           return (
             <span>
-              Ca Issuers:{" "}
+              CA Issuers:{" "}
               <span style={{ fontFamily: "monospace" }}>{accessLocation}</span>
             </span>
           );
@@ -233,13 +260,77 @@ function CertificateExtensionAuthorityInfoAccess(
   );
   return (
     <>
-      <p>Authority Information Access:</p>
-      <ul>
+      Authority Information Access:
+      <ul style={{ listStyleType: "none" }}>
         {accessMethods.map((accessMethod, index) => (
           <li key={index}>{accessMethod}</li>
         ))}
       </ul>
     </>
   );
+}
+
+function CertificateExtensionEnrollmentCertType(
+  props: ICertificateExtensionBase
+) {
+  const asn1Blob = forge.asn1.fromDer(props.value);
+  return <div>Certificate Template: {asn1Blob.value as string}</div>;
+}
+
+interface ICertificateExtensionExtendedKeyUsage
+  extends ICertificateExtensionBase {
+  serverAuth?: boolean;
+  clientAuth?: boolean;
+  codeSigning?: boolean;
+  emailProtection?: boolean;
+  timeStamping?: boolean;
+}
+
+function CertificateExtensionExtendedKeyUsage(
+  props: ICertificateExtensionExtendedKeyUsage
+) {
+  // The forge function that parses extKeyUsage will only put 'true' usages on the object
+  const extKeyUsages = Object.keys(props)
+    .filter((key) => !["critical", "id", "name", "value"].includes(key))
+    .map((key, index) => (
+      <Label size="tiny" key={index} className="qtr-margin-left">
+        {key}
+      </Label>
+    ));
+
+  return <div>Extended Key Usages: {extKeyUsages}</div>;
+}
+
+interface ICertificateExtensionBasicConstraints
+  extends ICertificateExtensionBase {
+  cA: boolean;
+  pathLenConstraint?: number;
+}
+function CertificateExtensionBasicConstraints(
+  props: ICertificateExtensionBasicConstraints
+) {
+  return (
+    <div>
+      Basic Constraints:
+      <ul style={{ listStyleType: "none" }}>
+        <li>CA: {props.cA ? "True" : "False"}</li>
+        {props.pathLenConstraint !== undefined && (
+          <li>Path Length Constraint: {props.pathLenConstraint}</li>
+        )}
+      </ul>
+    </div>
+  );
+}
+
+function CertificateExtensionMsCertificateServicesCaVersion(
+  props: ICertificateExtensionBase
+) {
+  const textEncoder = new TextEncoder();
+  const versionArray = textEncoder.encode(props.value);
+  const versionArrayString = [];
+  versionArray.forEach((int) => {
+    versionArrayString.push(int.toString());
+  });
+  return <div>MS CA Version: {versionArray.join(".")}</div>;
 }
 export default CertificateExtension;
