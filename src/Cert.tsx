@@ -138,10 +138,9 @@ function Cert(props: ICert) {
                     <ul style={{ listStyleType: "none" }}>
                       {certObj.extensions.map((extension, idx) => {
                         return (
-                          <li>
+                          <li key={idx}>
                             <CertificateExtension
                               extension={extension}
-                              key={idx}
                             ></CertificateExtension>
                           </li>
                         );

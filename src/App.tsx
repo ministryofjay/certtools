@@ -56,7 +56,9 @@ function App() {
                 .filter(({ name }) => {
                   return name === currentTab;
                 })
-                .map(({ component }) => component)}
+                .map((tab, index) => (
+                  <div key={index}>{tab.component}</div>
+                ))}
             </div>
           </div>
         </div>

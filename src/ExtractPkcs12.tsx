@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 
-import { Radios } from "@vkumov/react-cui-2.0";
+import { Radios, Dropzone, Panel } from "@vkumov/react-cui-2.0";
 import Cert from "./Cert";
 
 import * as forge from "node-forge";
@@ -131,7 +131,10 @@ Blnl9YxnnqYuRF1HFgQI+rXFej+yTooCAggA
 -----END PKCS12-----
 `;
 
-const processPkcs12 = (inputBytes: string, password: string) => {
+const processPkcs12 = (
+  inputBytes: string | forge.util.ByteBuffer,
+  password: string
+) => {
   const p12Asn1 = forge.asn1.fromDer(inputBytes);
   const p12 = forge.pkcs12.pkcs12FromAsn1(p12Asn1, password);
   const keyBags = p12.getBags({
@@ -156,7 +159,7 @@ const processPkcs12 = (inputBytes: string, password: string) => {
     forge.pki.oids.certBag
   ] as forge.pkcs12.Bag[];
   const certificateChain = certBags
-    .map((bag: any) => bag.cert)
+    .map((bag: any) => bag.cert as forge.pki.Certificate)
     .filter((certObj: any) => {
       const certDer = forge.asn1
         .toDer(forge.pki.certificateToAsn1(certObj))
@@ -182,12 +185,16 @@ function ExtractPkcs12Tool() {
     useState<string>(examplePkcs12Pem);
   const [inputPkcs12PemErrorText, setInputPkcs12PemErrorText] =
     useState<string>("");
-  const [inputPkcs12Bytes, setInputPkcs12Bytes] = useState<string>("");
+  const [inputPkcs12Bytes, setInputPkcs12Bytes] = useState<
+    string | forge.util.ByteBuffer
+  >("");
 
   const [privateKey, setPrivateKey] = useState<string>("");
   const [certificateChain, setCertificateChain] = useState<
     forge.pki.Certificate[]
   >([]);
+
+  const [dropZoneError, setDropZoneError] = useState<string>("");
 
   const processInputPkcs12Pem = (
     event: React.ChangeEvent<HTMLTextAreaElement>
@@ -274,7 +281,48 @@ function ExtractPkcs12Tool() {
               </div>
             </div>
           ) : (
-            <p>file drop</p>
+            <Panel>
+              <Dropzone
+                name="Upload PKCS12 (.pfx) file"
+                label="Binary (DER) File"
+                multiple={false}
+                onChange={async (files) => {
+                  if (files.length) {
+                    const readFileContents = async (file: File) => {
+                      return new Promise<forge.util.ByteBuffer>(
+                        (resolve, reject) => {
+                          const reader = new FileReader();
+                          reader.onloadend = (event) => {
+                            console.log("finished reading");
+                            const a = new forge.util.ByteStringBuffer(
+                              event.target?.result as ArrayBuffer
+                            );
+                            resolve(a);
+                          };
+                          reader.readAsArrayBuffer(file);
+                        }
+                      );
+                    };
+                    const fileContents = await readFileContents(files[0]);
+                    setInputPkcs12Bytes(fileContents);
+                  }
+                }}
+                accept=".pfx"
+                validator={(file) => {
+                  if (file.name.endsWith(".pfx")) {
+                    setDropZoneError("");
+                    return null;
+                  } else {
+                    setDropZoneError("Not a .pfx file");
+                    return {
+                      code: "not-a-pfx",
+                      message: `Not a Pfx file.`,
+                    };
+                  }
+                }}
+                error={dropZoneError}
+              ></Dropzone>
+            </Panel>
           )}
         </div>
       </div>
