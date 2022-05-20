@@ -213,7 +213,6 @@ function ExtractPkcs12Tool() {
     // Basic validation of input is a valid PEM data
     const validInput = pemRegex.exec(event.target.value);
     if (validInput) {
-      console.log("Woot");
       setInputPkcs12PemErrorText("");
       // Get just pure base64 string
       const p12B64 = validInput?.groups?.b64String.replace(

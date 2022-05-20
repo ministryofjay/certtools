@@ -14,9 +14,9 @@ function App() {
       name: "Open PKCS#12",
       component: <ExtractPkcs12Tool></ExtractPkcs12Tool>,
     },
-    { name: "Tool2", component: <Tool2></Tool2> },
+    //{ name: "Tool2", component: <Tool2></Tool2> },
   ];
-  const [currentTab, setCurrentTab] = useState<string>(tabs[1].name);
+  const [currentTab, setCurrentTab] = useState<string>(tabs[0].name);
 
   return (
     <div>

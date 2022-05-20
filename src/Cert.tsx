@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 
 import * as forge from "node-forge";
 
@@ -13,6 +13,7 @@ interface IForgeCertificate extends forge.pki.Certificate {
 
 interface ICert {
   certObj: forge.pki.Certificate;
+  displayPem?: boolean;
 }
 
 const signatureOidMap = {
@@ -50,6 +51,7 @@ const decodeDistinguishedName = (attributes: forge.pki.CertificateField[]) => {
 };
 
 function Cert(props: ICert) {
+  const displayPem = props.displayPem === undefined ? true : props.displayPem;
   const certObj = props.certObj as IForgeCertificate;
   const certPem = forge.pki.certificateToPem(certObj);
   const subjectName = decodeDistinguishedName(certObj.subject.attributes);
@@ -89,7 +91,7 @@ function Cert(props: ICert) {
               </div>
             </div>
             <div className="row">
-              <div className="col-6">
+              <div className={displayPem ? "col-6" : "col"}>
                 <ul style={{ listStyleType: "none" }}>
                   <li>
                     <b>Serial #: </b>
@@ -149,11 +151,13 @@ function Cert(props: ICert) {
                   </li>
                 </ul>
               </div>
-              <div className="col-6">
-                <Panel well={true} color="light">
-                  <pre>{certPem}</pre>
-                </Panel>
-              </div>
+              {displayPem && (
+                <div className="col-6">
+                  <Panel well={true} color="light">
+                    <pre>{certPem}</pre>
+                  </Panel>
+                </div>
+              )}
             </div>
           </Panel>
         </div>
