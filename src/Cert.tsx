@@ -89,7 +89,7 @@ function Cert(props: ICert) {
               </div>
             </div>
             <div className="row">
-              <div className="col">
+              <div className="col-6">
                 <ul style={{ listStyleType: "none" }}>
                   <li>
                     <b>Serial #: </b>
@@ -149,7 +149,7 @@ function Cert(props: ICert) {
                   </li>
                 </ul>
               </div>
-              <div className="col">
+              <div className="col-6">
                 <Panel well={true} color="light">
                   <pre>{certPem}</pre>
                 </Panel>

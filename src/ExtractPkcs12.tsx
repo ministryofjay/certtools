@@ -10,6 +10,7 @@ import {
 import Cert from "./Cert";
 
 import * as forge from "node-forge";
+import RSAPrivateKey from "./RSAPrivateKey";
 
 const examplePkcs12Pem = `
 -----BEGIN PKCS12-----
@@ -153,7 +154,6 @@ const processPkcs12 = (
     throw new Error("No private key found in the pkcs12");
   }
   const privateKey = privateKeyBags[0].key as forge.pki.PrivateKey;
-  const privateKeyPem = forge.pki.privateKeyToPem(privateKey);
   const certificateChainBags = p12.getBags({
     bagType: forge.pki.oids.certBag,
   });
@@ -180,7 +180,7 @@ const processPkcs12 = (
         return true;
       }
     });
-  return { privateKey: privateKeyPem, certificateChain: certificateChain };
+  return { privateKey: privateKey, certificateChain: certificateChain };
 };
 
 function ExtractPkcs12Tool() {
@@ -195,7 +195,7 @@ function ExtractPkcs12Tool() {
     string | forge.util.ByteBuffer
   >("");
 
-  const [privateKey, setPrivateKey] = useState<string>("");
+  const [privateKey, setPrivateKey] = useState<forge.pki.PrivateKey>();
   const [certificateChain, setCertificateChain] = useState<
     forge.pki.Certificate[]
   >([]);
@@ -243,7 +243,7 @@ function ExtractPkcs12Tool() {
           setInputError("Invalid PKCS format");
         }
         setInputError(err.message);
-        setPrivateKey("");
+        setPrivateKey(undefined);
         setCertificateChain([]);
       }
     }
@@ -381,7 +381,7 @@ function ExtractPkcs12Tool() {
           </div>
         </div>
       </Panel>
-      {privateKey && certificateChain && (
+      {privateKey !== undefined && certificateChain && (
         <Panel color="light" padding="loose" className="half-margin-top">
           <div className="row">
             <div className="col">
@@ -391,8 +391,7 @@ function ExtractPkcs12Tool() {
           <div className="row">
             <div className="col">
               <Panel>
-                <p>Private Key</p>
-                <pre>{privateKey}</pre>
+                <RSAPrivateKey keyPair={privateKey}></RSAPrivateKey>
               </Panel>
             </div>
           </div>
