@@ -257,7 +257,7 @@ function ExtractPkcs12Tool() {
   return (
     <Panel>
       <Panel>
-        <h1>Open a PKCS12 File</h1>
+        <h2>Open a PKCS12 File</h2>
       </Panel>
       <Panel
         bordered={true}
@@ -324,11 +324,11 @@ function ExtractPkcs12Tool() {
                         (resolve, reject) => {
                           const reader = new FileReader();
                           reader.onloadend = (event) => {
-                            console.log("finished reading");
-                            const a = new forge.util.ByteStringBuffer(
-                              event.target?.result as ArrayBuffer
-                            );
-                            resolve(a);
+                            const byteStringBuffer =
+                              new forge.util.ByteStringBuffer(
+                                event.target?.result as ArrayBuffer
+                              );
+                            resolve(byteStringBuffer);
                           };
                           reader.readAsArrayBuffer(file);
                         }

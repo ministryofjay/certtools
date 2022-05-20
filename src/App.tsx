@@ -4,17 +4,19 @@ import "./public/css/cui-standard.min.css";
 import ExtractPkcs12Tool from "./ExtractPkcs12";
 import Intro from "./Intro";
 import Tool2 from "./Tool2";
+import ViewCert from "./ViewCert";
 
 function App() {
   const tabs = [
     { name: "Home", component: <Intro></Intro> },
+    { name: "View Certificate", component: <ViewCert></ViewCert> },
     {
       name: "Open PKCS#12",
       component: <ExtractPkcs12Tool></ExtractPkcs12Tool>,
     },
     { name: "Tool2", component: <Tool2></Tool2> },
   ];
-  const [currentTab, setCurrentTab] = useState<string>(tabs[0].name);
+  const [currentTab, setCurrentTab] = useState<string>(tabs[1].name);
 
   return (
     <div>
