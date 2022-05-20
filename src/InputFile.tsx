@@ -96,7 +96,7 @@ function InputFile({ allowedFileTypes, pemHeader, onFileLoad }: IInputFile) {
                     processPemText(e.target.value);
                     setPemInput(e.target.value);
                   }}
-                  label="Enter the PKCS12 PEM Encoded Text"
+                  label="Enter the PEM Encoded Text"
                   placeholder={`-----BEGIN ${pemHeader || "XXXX"}-----
 MIIWlwIBAzCCFl0GCSqGSIb3DQEHAaCCFk4EghZKMIIWRjCCELcGCSqGSIb3DQEH
 BqCCEKgwghCkAgEAMIIQnQYJKoZIhvcNAQcBMBwGCiqGSIb3DQEMAQMwDgQIQgHv

@@ -36,7 +36,6 @@ function ViewCert() {
           pemHeader="CERTIFICATE"
           onFileLoad={onFileLoaded}
         ></InputFile>
-        <div>der got {certificateDer.data.length}</div>
         {certificateObject && (
           <Cert certObj={certificateObject} displayPem={false}></Cert>
         )}
