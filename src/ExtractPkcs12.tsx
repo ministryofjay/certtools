@@ -200,6 +200,7 @@ function ExtractPkcs12Tool() {
     forge.pki.Certificate[]
   >([]);
 
+  const [inputError, setInputError] = useState<string>("");
   const [dropZoneError, setDropZoneError] = useState<string>("");
 
   const processInputPkcs12Pem = (
@@ -228,12 +229,23 @@ function ExtractPkcs12Tool() {
 
   useEffect(() => {
     if (inputPkcs12Bytes && inputPassword) {
-      const { privateKey, certificateChain } = processPkcs12(
-        inputPkcs12Bytes,
-        inputPassword
-      );
-      setPrivateKey(privateKey);
-      setCertificateChain(certificateChain);
+      try {
+        const { privateKey, certificateChain } = processPkcs12(
+          inputPkcs12Bytes,
+          inputPassword
+        );
+        setPrivateKey(privateKey);
+        setCertificateChain(certificateChain);
+        setInputError("");
+      } catch (e: any) {
+        const err = e as Error;
+        if (err.message.startsWith("Too few bytes to read ASN.1 value.")) {
+          setInputError("Invalid PKCS format");
+        }
+        setInputError(err.message);
+        setPrivateKey("");
+        setCertificateChain([]);
+      }
     }
   }, [inputPkcs12Bytes, inputPassword]);
 
@@ -358,27 +370,37 @@ function ExtractPkcs12Tool() {
           </div>
         </div>
         <div className="row">
-          <div className="col">PKCS12 {bytesLength} length</div>
-        </div>
-      </Panel>
-      <Panel color="light" padding="loose" className="half-margin-top">
-        <div className="row">
-          <div className="col">
-            <h3>Output</h3>
-          </div>
-        </div>
-        <div className="row">
           <div className="col">
             <Panel>
-              <p>Private Key</p>
-              <pre>{privateKey}</pre>
+              {!inputError && bytesLength ? (
+                <div>Success PKCS12 {bytesLength} length</div>
+              ) : (
+                inputError && <div>Error {inputError}</div>
+              )}
             </Panel>
           </div>
         </div>
-        {certificateChain.map((cert, idx) => {
-          return <Cert certObj={cert} key={idx}></Cert>;
-        })}
       </Panel>
+      {privateKey && certificateChain && (
+        <Panel color="light" padding="loose" className="half-margin-top">
+          <div className="row">
+            <div className="col">
+              <h3>Output</h3>
+            </div>
+          </div>
+          <div className="row">
+            <div className="col">
+              <Panel>
+                <p>Private Key</p>
+                <pre>{privateKey}</pre>
+              </Panel>
+            </div>
+          </div>
+          {certificateChain.map((cert, idx) => {
+            return <Cert certObj={cert} key={idx}></Cert>;
+          })}
+        </Panel>
+      )}
     </Panel>
   );
 }
