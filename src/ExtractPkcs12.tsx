@@ -1,6 +1,12 @@
 import React, { useEffect, useState } from "react";
 
-import { Radios, Dropzone, Panel } from "@vkumov/react-cui-2.0";
+import {
+  Radios,
+  Dropzone,
+  Panel,
+  Input,
+  Textarea,
+} from "@vkumov/react-cui-2.0";
 import Cert from "./Cert";
 
 import * as forge from "node-forge";
@@ -231,57 +237,70 @@ function ExtractPkcs12Tool() {
     }
   }, [inputPkcs12Bytes, inputPassword]);
 
+  const bytesLength =
+    typeof inputPkcs12Bytes === "string"
+      ? inputPkcs12Bytes.length
+      : inputPkcs12Bytes.data.length;
+
   return (
-    <div className="panel">
-      <div className="row">
-        <div className="col">Open a PKCS12 File</div>
-      </div>
-      <div className="row">
-        <div className="col-2">
-          <div className="panel">
-            {
-              <Radios
-                name="inputType"
-                value={inputType}
-                values={[
-                  { value: "PEM", label: "PEM" },
-                  { value: "DER", label: "DER" },
-                ]}
-                onChange={(value: string) => {
-                  setInputType(value);
-                }}
-              ></Radios>
-            }
+    <Panel>
+      <Panel>
+        <h1>Open a PKCS12 File</h1>
+      </Panel>
+      <Panel
+        bordered={true}
+        raised={true}
+        color="lightest"
+        padding="loose"
+        className="half-margin-top"
+      >
+        <div className="row">
+          <div className="col">
+            <h3>Input File</h3>
           </div>
         </div>
-        <div className="col-10">
-          {inputType === "PEM" ? (
-            <div>
-              <div
-                className={
-                  "form-group base-margin-bottom " +
-                  (inputPkcs12PemErrorText ? "form-group--error" : "")
-                }
-              >
-                <div className="form-group__text">
-                  <textarea
-                    id="textarea-label-default"
-                    className="textarea"
+        <div className="row">
+          <div className="col-2">
+            <div className="panel">
+              {
+                <Radios
+                  name="inputType"
+                  value={inputType}
+                  values={[
+                    { value: "PEM", label: "PEM" },
+                    { value: "DER", label: "DER" },
+                  ]}
+                  onChange={(value: string) => {
+                    setInputType(value);
+                  }}
+                ></Radios>
+              }
+            </div>
+          </div>
+          <div className="col-10">
+            {inputType === "PEM" ? (
+              <div>
+                <div
+                  className={
+                    "form-group base-margin-bottom " +
+                    (inputPkcs12PemErrorText ? "form-group--error" : "")
+                  }
+                >
+                  <Textarea
                     rows={20}
                     value={inputPkcs12Pem}
                     onChange={processInputPkcs12Pem}
-                  ></textarea>
-                  <label>Enter the PKCS12 text</label>
+                    label="Enter the PKCS12 PEM Encoded Text"
+                    placeholder="foo"
+                  ></Textarea>
+                  {inputPkcs12PemErrorText && (
+                    <div className="help-block" role="alert">
+                      <span>{inputPkcs12PemErrorText}</span>
+                    </div>
+                  )}
                 </div>
-                {inputPkcs12PemErrorText && (
-                  <div className="help-block" role="alert">
-                    <span>{inputPkcs12PemErrorText}</span>
-                  </div>
-                )}
               </div>
-            </div>
-          ) : (
-            <Panel>
+            ) : (
               <Dropzone
                 name="Upload PKCS12 (.pfx) file"
                 label="Binary (DER) File"
@@ -322,33 +341,45 @@ function ExtractPkcs12Tool() {
                 }}
                 error={dropZoneError}
               ></Dropzone>
+            )}
+          </div>
+        </div>
+        <div className="row">
+          <div className="col">
+            <Input
+              label="PKCS12 Password"
+              type="text"
+              value={inputPassword}
+              onChange={(event) => {
+                const target = event.target as HTMLInputElement;
+                setInputPassword(target.value);
+              }}
+            ></Input>
+          </div>
+        </div>
+        <div className="row">
+          <div className="col">PKCS12 {bytesLength} length</div>
+        </div>
+      </Panel>
+      <Panel color="light" padding="loose" className="half-margin-top">
+        <div className="row">
+          <div className="col">
+            <h3>Output</h3>
+          </div>
+        </div>
+        <div className="row">
+          <div className="col">
+            <Panel>
+              <p>Private Key</p>
+              <pre>{privateKey}</pre>
             </Panel>
-          )}
+          </div>
         </div>
-      </div>
-      <div className="row">
-        <div className="col">
-          <input
-            value={inputPassword}
-            onChange={(event) => {
-              setInputPassword(event.target.value);
-            }}
-          ></input>
-        </div>
-      </div>
-      <div className="row">
-        <div className="col">Got bytes {inputPkcs12Bytes.length}</div>
-      </div>
-      <div className="row">
-        <div className="col">
-          <p>Private Key</p>
-          <pre>{privateKey}</pre>
-        </div>
-      </div>
-      {certificateChain.map((cert, idx) => {
-        return <Cert certObj={cert} key={idx}></Cert>;
-      })}
-    </div>
+        {certificateChain.map((cert, idx) => {
+          return <Cert certObj={cert} key={idx}></Cert>;
+        })}
+      </Panel>
+    </Panel>
   );
 }
 
