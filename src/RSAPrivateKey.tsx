@@ -17,9 +17,11 @@ export function privateKeyDetails(keyPair: forge.pki.rsa.PrivateKey) {
 
 interface IPrivateKey {
   keyPair: forge.pki.PrivateKey;
+  displayPem?: boolean;
 }
 
 function RSAPrivateKey(props: IPrivateKey) {
+  const displayPem = props.displayPem === undefined ? true : props.displayPem;
   const { pem, modulus, size, exponent } = privateKeyDetails(
     props.keyPair as forge.pki.rsa.PrivateKey
   );
@@ -41,7 +43,7 @@ function RSAPrivateKey(props: IPrivateKey) {
         </div>
       </div>
       <div className="row">
-        <div className="col-6">
+        <div className={displayPem ? "col-6" : "col"}>
           <ul style={{ listStyleType: "none" }}>
             <li>Key Size: {size}</li>
             <li>Modulus:</li>
@@ -52,11 +54,13 @@ function RSAPrivateKey(props: IPrivateKey) {
             <li></li>
           </ul>
         </div>
-        <div className="col-6">
-          <Panel well={true} color="light">
-            <pre>{pem}</pre>
-          </Panel>
-        </div>
+        {displayPem && (
+          <div className="col-6">
+            <Panel well={true} color="light">
+              <pre>{pem}</pre>
+            </Panel>
+          </div>
+        )}
       </div>
     </Panel>
   );
