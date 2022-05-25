@@ -16,7 +16,7 @@ function App() {
     },
     { name: "Build PKCS12", component: <BuildPkcs12></BuildPkcs12> },
   ];
-  const [currentTab, setCurrentTab] = useState<string>(tabs[3].name);
+  const [currentTab, setCurrentTab] = useState<string>(tabs[0].name);
 
   return (
     <div>

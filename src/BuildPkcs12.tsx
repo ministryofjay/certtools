@@ -1,5 +1,5 @@
-import { Button, Icon, Panel } from "@vkumov/react-cui-2.0";
-import React, { useCallback, useEffect, useState } from "react";
+import { Icon, Panel } from "@vkumov/react-cui-2.0";
+import React, { useEffect, useState } from "react";
 import * as forge from "node-forge";
 
 import { Buffer } from "buffer";
@@ -8,18 +8,20 @@ import { Textarea, Input } from "@vkumov/react-cui-2.0";
 
 import RSAPrivateKey, { privateKeyDetails } from "./RSAPrivateKey";
 import Cert from "./Cert";
+import ExportFile from "./ExportFile";
 
 export function constructPkcs12(
   exportPassword: string,
   privateKey: forge.pki.PrivateKey,
   certificateChain: forge.pki.Certificate[]
-): forge.util.ByteBuffer {
+): { der: string; pem: string } {
   const p12Asn1Object = forge.pkcs12.toPkcs12Asn1(
     privateKey,
     certificateChain,
     exportPassword
   );
-  return forge.asn1.toDer(p12Asn1Object);
+  const der = forge.asn1.toDer(p12Asn1Object).getBytes();
+  return { der, pem: forge.util.encode64(der, 60) };
 }
 
 function BuildPkcs12() {
@@ -105,7 +107,7 @@ function BuildPkcs12() {
     privateKeyModulus === idCertificateModulus &&
     privateKey;
 
-  let pkcs12Object;
+  let pkcs12Object = { der: "", pem: "" };
   if (validInputs) {
     pkcs12Object = constructPkcs12(
       exportPassword,
@@ -260,9 +262,12 @@ Blnl9YxnnqYuRF1HFgQI+rXFej+yTooCAggA
           </div>
           <div className="row">
             <div className="col">
-              <Panel>
-                <h3>Export File</h3>
-              </Panel>
+              {validInputs && (
+                <ExportFile
+                  data={pkcs12Object.der}
+                  pemHeader="PKCS12"
+                ></ExportFile>
+              )}
             </div>
           </div>
         </div>
