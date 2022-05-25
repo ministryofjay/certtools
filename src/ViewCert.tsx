@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useState } from "react";
 
 import { Panel } from "@vkumov/react-cui-2.0";
 import InputFile from "./InputFile";
@@ -7,10 +7,6 @@ import * as forge from "node-forge";
 import Cert from "./Cert";
 
 function ViewCert() {
-  const [certificateDer, setCertificateDer] = useState<forge.util.ByteBuffer>(
-    forge.util.createBuffer("")
-  );
-
   const [certificateObject, setCertificateObject] =
     useState<forge.pki.Certificate>();
 
@@ -19,7 +15,6 @@ function ViewCert() {
       const asn1Blob = forge.asn1.fromDer(derInput.data);
       const certObj = forge.pki.certificateFromAsn1(asn1Blob);
       setCertificateObject(certObj);
-      setCertificateDer(derInput);
     } catch (error) {
       console.log(error);
     }

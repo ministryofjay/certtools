@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 
 import * as forge from "node-forge";
 import { Buffer } from "buffer";

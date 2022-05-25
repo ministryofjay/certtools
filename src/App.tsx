@@ -49,6 +49,7 @@ function App() {
               {tabs.map((tab, index) => {
                 return (
                   <li key={index} className="sidebar__item">
+                    {/* eslint-disable-next-line */}
                     <a
                       href="#"
                       tabIndex={index}
