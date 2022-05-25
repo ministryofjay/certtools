@@ -1,5 +1,5 @@
 import { Button, Icon, Panel } from "@vkumov/react-cui-2.0";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import * as forge from "node-forge";
 
 import { Buffer } from "buffer";
@@ -8,6 +8,7 @@ import { Textarea, Input } from "@vkumov/react-cui-2.0";
 
 import RSAPrivateKey, { privateKeyDetails } from "./RSAPrivateKey";
 import Cert from "./Cert";
+import { errorMonitor } from "stream";
 
 function BuildPkcs12() {
   const [pemKeyInput, setPemKeyInput] = useState<string>("");
@@ -62,6 +63,28 @@ function BuildPkcs12() {
       .toUpperCase();
   }
 
+  const validChain = certArray.map(
+    (certObj: forge.pki.Certificate | undefined, index: number): string => {
+      const cArray = certArray.slice(0, index + 1);
+      if (cArray[index] && index > 0) {
+        const caStore = forge.pki.createCaStore();
+        caStore.addCertificate(cArray[index] as forge.pki.Certificate);
+        try {
+          forge.pki.verifyCertificateChain(
+            caStore,
+            cArray.slice().reverse().slice(1) as forge.pki.Certificate[]
+          );
+          return "";
+        } catch (error: any) {
+          return error.message;
+        }
+      }
+      return "";
+    }
+  );
+
+  console.log(certArray);
+
   return (
     <>
       <div className="row">
@@ -74,6 +97,7 @@ function BuildPkcs12() {
       <div className="row">
         <div className="col-6">
           <Panel>
+            <h3>Private Key</h3>
             <Textarea
               rows={20}
               error={pemKeyInputError}
@@ -118,9 +142,11 @@ Blnl9YxnnqYuRF1HFgQI+rXFej+yTooCAggA
             >
               <div className="text-center">
                 {privateKeyModulus === idCertificateModulus ? (
-                  <span>Good</span>
+                  <span>The private key matches the identity certificate</span>
                 ) : (
-                  <span>bad</span>
+                  <span>
+                    The private key doesn't match identity certificate
+                  </span>
                 )}
               </div>
             </Panel>
@@ -133,36 +159,43 @@ Blnl9YxnnqYuRF1HFgQI+rXFej+yTooCAggA
           <div className="row">
             <div className="col">
               <div className="clearfix">
-                <Panel className="pull-right" padding="loose">
-                  <Icon
-                    size={24}
-                    icon="add"
-                    onClick={(event) => {
-                      console.log(event);
-                      setNumberOfCerts(numberOfCerts + 1);
-                    }}
-                  ></Icon>
-                </Panel>
+                <Icon
+                  className="pull-right"
+                  size={24}
+                  icon="add"
+                  onClick={() => {
+                    setNumberOfCerts(numberOfCerts + 1);
+                  }}
+                ></Icon>
               </div>
             </div>
           </div>
           <div className="row">
             <div className="col">
+              <h3>Certificate Chain</h3>
               {[...Array(numberOfCerts).keys()].map((certNumber) => {
+                const validationError = validChain[certNumber];
                 return (
-                  <Panel key={certNumber}>
+                  <Panel
+                    key={certNumber}
+                    raised={true}
+                    bordered={true}
+                    className="half-margin-top"
+                  >
+                    <div className="text-center text-danger">
+                      {validationError}
+                    </div>
                     {certNumber > 0 && certNumber + 1 === numberOfCerts && (
                       <div className="row">
                         <div className="col">
-                          <Panel className="pull-right" padding="loose">
-                            <Icon
-                              size={24}
-                              icon="delete"
-                              onClick={() => {
-                                setNumberOfCerts(numberOfCerts - 1);
-                              }}
-                            ></Icon>
-                          </Panel>
+                          <Icon
+                            size={24}
+                            icon="delete"
+                            className="pull-right"
+                            onClick={() => {
+                              setNumberOfCerts(numberOfCerts - 1);
+                            }}
+                          ></Icon>
                         </div>
                       </div>
                     )}
@@ -177,6 +210,9 @@ Blnl9YxnnqYuRF1HFgQI+rXFej+yTooCAggA
                 );
               })}
             </div>
+          </div>
+          <div className="row">
+            <div className="col">{validChain.join(",")}</div>
           </div>
         </div>
       </div>
@@ -205,6 +241,7 @@ export function InputCert(props: IInputCert) {
     } else {
       setCert(undefined);
     }
+    // eslint-disable-next-line
   }, [pemInput]);
 
   return (
