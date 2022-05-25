@@ -8,9 +8,22 @@ import { Textarea, Input } from "@vkumov/react-cui-2.0";
 
 import RSAPrivateKey, { privateKeyDetails } from "./RSAPrivateKey";
 import Cert from "./Cert";
-import { errorMonitor } from "stream";
+
+export function constructPkcs12(
+  exportPassword: string,
+  privateKey: forge.pki.PrivateKey,
+  certificateChain: forge.pki.Certificate[]
+): forge.util.ByteBuffer {
+  const p12Asn1Object = forge.pkcs12.toPkcs12Asn1(
+    privateKey,
+    certificateChain,
+    exportPassword
+  );
+  return forge.asn1.toDer(p12Asn1Object);
+}
 
 function BuildPkcs12() {
+  const [exportPassword, setExportPassword] = useState<string>("Cisco123");
   const [pemKeyInput, setPemKeyInput] = useState<string>("");
   const [pemKeyInputError, setPemKeyInputError] = useState<string>("");
   const [privateKey, setPrivateKey] = useState<forge.pki.PrivateKey>();
@@ -66,22 +79,40 @@ function BuildPkcs12() {
   const validChain = certArray.map(
     (certObj: forge.pki.Certificate | undefined, index: number): string => {
       const cArray = certArray.slice(0, index + 1);
-      if (cArray[index] && index > 0) {
-        const caStore = forge.pki.createCaStore();
-        caStore.addCertificate(cArray[index] as forge.pki.Certificate);
-        try {
-          forge.pki.verifyCertificateChain(
-            caStore,
-            cArray.slice().reverse().slice(1) as forge.pki.Certificate[]
-          );
-          return "";
-        } catch (error: any) {
-          return error.message;
+      if (index > 0) {
+        if (cArray[index]) {
+          const caStore = forge.pki.createCaStore();
+          caStore.addCertificate(cArray[index] as forge.pki.Certificate);
+          try {
+            forge.pki.verifyCertificateChain(
+              caStore,
+              cArray.slice().reverse().slice(1) as forge.pki.Certificate[]
+            );
+            return "";
+          } catch (error: any) {
+            return error.message;
+          }
+        } else {
+          return "Missing Certificate";
         }
+      } else {
+        return "";
       }
-      return "";
     }
   );
+  const validInputs =
+    validChain.every((message: string) => message.length === 0) &&
+    privateKeyModulus === idCertificateModulus &&
+    privateKey;
+
+  let pkcs12Object;
+  if (validInputs) {
+    pkcs12Object = constructPkcs12(
+      exportPassword,
+      privateKey,
+      certArray as forge.pki.Certificate[]
+    );
+  }
 
   console.log(certArray);
 
@@ -212,7 +243,27 @@ Blnl9YxnnqYuRF1HFgQI+rXFej+yTooCAggA
             </div>
           </div>
           <div className="row">
-            <div className="col">{validChain.join(",")}</div>
+            <div className="col">
+              {validInputs && (
+                <Panel>
+                  <h3>Export Password</h3>
+                  <Input
+                    type="text"
+                    value={exportPassword}
+                    onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
+                      setExportPassword(event.target.value)
+                    }
+                  ></Input>
+                </Panel>
+              )}
+            </div>
+          </div>
+          <div className="row">
+            <div className="col">
+              <Panel>
+                <h3>Export File</h3>
+              </Panel>
+            </div>
           </div>
         </div>
       </div>
