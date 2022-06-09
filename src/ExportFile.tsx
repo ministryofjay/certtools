@@ -81,10 +81,21 @@ ${pemDump}
                     for (let i = 0; i < arrayBuffer.length; i++) {
                       arrayBuffer[i] = data.charCodeAt(i);
                     }
-                    const fileHandle = await window.showSaveFilePicker();
-                    const fileStream = await fileHandle.createWritable();
-                    await fileStream.write(new Blob([arrayBuffer]));
-                    await fileStream.close();
+                    if (window.showSaveFilePicker) {
+                      const fileHandle = await window.showSaveFilePicker();
+                      const fileStream = await fileHandle.createWritable();
+                      await fileStream.write(new Blob([arrayBuffer]));
+                      await fileStream.close();
+                    } else {
+                      const b64String =
+                        forge.util.binary.base64.encode(arrayBuffer);
+                      const link = document.createElement("a");
+                      link.download = "exported_pcks12.pfx";
+                      link.href = `data:application/x-pkcs12,${b64String}`;
+                      document.body.appendChild(link);
+                      link.click();
+                      document.body.removeChild(link);
+                    }
                   }}
                 >
                   Save to File
