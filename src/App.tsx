@@ -5,18 +5,22 @@ import ExtractPkcs12Tool from "./ExtractPkcs12";
 import Intro from "./Intro";
 import BuildPkcs12 from "./BuildPkcs12";
 import ViewCert from "./ViewCert";
+import GenerateCsr from "./GenerateCsr";
+import ViewCsr from "./ViewCsr";
 
 function App() {
   const tabs = [
     { name: "Home", component: <Intro></Intro> },
     { name: "View Certificate", component: <ViewCert></ViewCert> },
     {
-      name: "Open PKCS12",
+      name: "View PKCS12",
       component: <ExtractPkcs12Tool></ExtractPkcs12Tool>,
     },
     { name: "Build PKCS12", component: <BuildPkcs12></BuildPkcs12> },
+    { name: "View CSR", component: <ViewCsr></ViewCsr> },
+    { name: "Build CSR", component: <GenerateCsr></GenerateCsr> },
   ];
-  const [currentTab, setCurrentTab] = useState<string>(tabs[0].name);
+  const [currentTab, setCurrentTab] = useState<string>(tabs[4].name);
 
   return (
     <div>
