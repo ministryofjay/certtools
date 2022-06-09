@@ -11,6 +11,8 @@ interface IInputFile {
 }
 
 function InputFile({ allowedFileTypes, pemHeader, onFileLoad }: IInputFile) {
+  const allowDer = allowedFileTypes.length > 0;
+
   const [inputType, setInputType] = useState<string>("PEM");
 
   const [pemInput, setPemInput] = useState<string>("");
@@ -21,7 +23,7 @@ function InputFile({ allowedFileTypes, pemHeader, onFileLoad }: IInputFile) {
 
   const processPemText = (inputString: string) => {
     const pemRegex =
-      /^\s*(-----BEGIN \w+-----)?\s*(?<b64String>[\s\nA-Za-z0-9/+=]+)\s*(-----END \w+-----)?\s*$/;
+      /^\s*(-----BEGIN [\w|\s]+-----)?\s*(?<b64String>[\s\nA-Za-z0-9/+=]+)\s*(-----END [\w\s]+-----)?\s*$/;
 
     // Basic validation of input is a valid PEM data
     const validInput = pemRegex.exec(inputString);
@@ -54,6 +56,11 @@ function InputFile({ allowedFileTypes, pemHeader, onFileLoad }: IInputFile) {
     }
   }, [onFileLoad, derInput]);
 
+  const radios = [{ value: "PEM", label: "PEM" }];
+  if (allowDer) {
+    radios.push({ value: "DER", label: "DER" });
+  }
+
   return (
     <>
       <div className="row">
@@ -68,10 +75,7 @@ function InputFile({ allowedFileTypes, pemHeader, onFileLoad }: IInputFile) {
               <Radios
                 name="inputType"
                 value={inputType}
-                values={[
-                  { value: "PEM", label: "PEM" },
-                  { value: "DER", label: "DER" },
-                ]}
+                values={radios}
                 onChange={(value: string) => {
                   setInputType(value);
                 }}

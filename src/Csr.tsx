@@ -34,14 +34,14 @@ function Csr(props: ICsr) {
   const csr = props.csr;
 
   let subjectDnArray = [];
-  if (csr.subject.attributes) {
+  if (csr?.subject.attributes) {
     for (let attr of csr.subject.attributes) {
       subjectDnArray.push(`${attr.shortName}=${attr.value}`);
     }
   }
   const publicKeyInfo = { n: "", nSize: 0, e: "" };
   publicKeyInfo.n = "";
-  const pKey = csr.publicKey as forge.pki.rsa.PublicKey;
+  const pKey = csr?.publicKey as forge.pki.rsa.PublicKey;
   if (pKey) {
     publicKeyInfo.nSize = pKey.n.bitLength();
     const nKey = Buffer.from(pKey.n.toByteArray())
@@ -52,7 +52,7 @@ function Csr(props: ICsr) {
   }
 
   let signature = "";
-  if (csr.signature) {
+  if (csr?.signature) {
     signature = prettyHexString(
       Buffer.from(csr.signature).toString("hex").toUpperCase(),
       25
@@ -62,8 +62,8 @@ function Csr(props: ICsr) {
   return (
     <Panel raised={true} className="qtr-margin-top">
       <h4>Certificate Request</h4>
-      <ul>
-        <li>Version: {csr.version}</li>
+      <ul style={{ listStyleType: "none" }}>
+        <li>Version: {csr?.version}</li>
         <li>
           Subject: <span>{subjectDnArray.join(", ")}</span>
         </li>
