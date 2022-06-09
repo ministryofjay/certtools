@@ -10,14 +10,21 @@ import InputFile from "./InputFile";
 const processPkcs12 = (inputBytes: forge.util.ByteBuffer, password: string) => {
   const p12Asn1 = forge.asn1.fromDer(inputBytes.data);
   const p12 = forge.pkcs12.pkcs12FromAsn1(p12Asn1, password);
-  const keyBags = p12.getBags({
+
+  // try getting the pkcs8 shrouded key bags first
+  let keyBags = p12.getBags({
     bagType: forge.pki.oids.pkcs8ShroudedKeyBag,
   });
-  const privateKeyBags = keyBags[
+  let privateKeyBags = keyBags[
     forge.pki.oids.pkcs8ShroudedKeyBag
   ] as forge.pkcs12.Bag[];
   if (privateKeyBags.length !== 1) {
-    throw new Error("No private key found in the pkcs12");
+    // now try the regular key bat
+    keyBags = p12.getBags({ bagType: forge.pki.oids.keyBag });
+    privateKeyBags = keyBags[forge.pki.oids.keyBag] as forge.pkcs12.Bag[];
+    if (privateKeyBags.length !== 1) {
+      throw new Error("No private key found in the pkcs12");
+    }
   }
   const privateKey = privateKeyBags[0].key as forge.pki.PrivateKey;
   const certificateChainBags = p12.getBags({
