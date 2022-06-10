@@ -14,6 +14,7 @@ import * as forge from "node-forge";
 
 interface ICsr {
   csr: any;
+  displayPem?: boolean;
 }
 
 function prettyHexString(inHex: string, bytesWidth: number): string {
@@ -30,13 +31,22 @@ function prettyHexString(inHex: string, bytesWidth: number): string {
   return tmpStr;
 }
 
+const shortNameToNameMap: { [key: string]: string } = {
+  serialNumber: "SN",
+  unstructuredAddress: "unstructuredAddress",
+  unstructuredName: "unstructuredName",
+};
+
 function Csr(props: ICsr) {
+  const displayPem = props.displayPem === undefined ? true : props.displayPem;
   const csr = props.csr;
 
   let subjectDnArray = [];
   if (csr?.subject.attributes) {
     for (let attr of csr.subject.attributes) {
-      subjectDnArray.push(`${attr.shortName}=${attr.value}`);
+      const shortName =
+        attr.shortName || (shortNameToNameMap[attr.name as string] as string);
+      subjectDnArray.push(`${shortName}=${attr.value}`);
     }
   }
   const publicKeyInfo = { n: "", nSize: 0, e: "" };
@@ -59,33 +69,49 @@ function Csr(props: ICsr) {
     );
   }
 
+  let csrPem: string;
+  try {
+    csrPem = forge.pki.certificationRequestToPem(csr);
+  } catch (error: any) {
+    csrPem = "";
+  }
+
   return (
     <Panel raised={true} className="qtr-margin-top">
       <h4>Certificate Request</h4>
-      <ul style={{ listStyleType: "none" }}>
-        <li>Version: {csr?.version}</li>
-        <li>
-          Subject: <span>{subjectDnArray.join(", ")}</span>
-        </li>
-        <li>
-          <span>Subject Public Key Info:</span>
-          <span>
-            <ul style={{ listStyleType: "none" }}>
-              <li>Key Size: {publicKeyInfo.nSize}</li>
-              <li>Modulus:</li>
-              <li>
-                <pre className="qtr-margin-left">{publicKeyInfo.n}</pre>
-              </li>
-              <li>Exponent: {publicKeyInfo.e}</li>
-              <li></li>
-            </ul>
-          </span>
-        </li>
-        <li>
-          <span>Signature Algorithm: </span>
-          <pre className="qtr-margin-left">{signature}</pre>
-        </li>
-      </ul>
+      <div className="row">
+        <div className="col">
+          <ul style={{ listStyleType: "none" }}>
+            <li>Version: {csr?.version}</li>
+            <li>
+              Subject: <span>{subjectDnArray.join(", ")}</span>
+            </li>
+            <li>
+              <span>Subject Public Key Info:</span>
+              <span>
+                <ul style={{ listStyleType: "none" }}>
+                  <li>Key Size: {publicKeyInfo.nSize}</li>
+                  <li>Modulus:</li>
+                  <li>
+                    <pre className="qtr-margin-left">{publicKeyInfo.n}</pre>
+                  </li>
+                  <li>Exponent: {publicKeyInfo.e}</li>
+                  <li></li>
+                </ul>
+              </span>
+            </li>
+            <li>
+              <span>Signature Algorithm: </span>
+              <pre className="qtr-margin-left">{signature}</pre>
+            </li>
+          </ul>
+        </div>
+        {displayPem && (
+          <div className="col">
+            <pre>{csrPem}</pre>
+          </div>
+        )}
+      </div>
     </Panel>
   );
 }

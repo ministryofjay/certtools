@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 
 import {
   Panel,
@@ -7,6 +7,9 @@ import {
   Dropdown,
   DropdownElement,
   Menu,
+  Icon,
+  EditableSelect,
+  Option,
 } from "@vkumov/react-cui-2.0";
 import { Buffer } from "buffer";
 
@@ -16,6 +19,7 @@ import * as forge from "node-forge";
 import RSAPrivateKey from "./RSAPrivateKey";
 import InputFile from "./InputFile";
 import Csr from "./Csr";
+import { OperationCanceledException } from "typescript";
 
 function GenerateCsr() {
   const [keyPairOption, setKeyPairOption] = useState<string>("generate");
@@ -24,8 +28,12 @@ function GenerateCsr() {
   const [csrObject, setCsrObject] = useState(
     forge.pki.createCertificationRequest()
   );
-
-  const csrSubjectAttributes = csrObject.subject;
+  const [subjectAttributes, setSubjectAttributes] = useState<
+    [string, string][]
+  >([
+    ["commonName", "jyoungta"],
+    ["countryName", "US"],
+  ]);
 
   useEffect(() => {
     // Generate a RSA private key immediately
@@ -40,12 +48,38 @@ function GenerateCsr() {
   }, [desiredKeyPairSize]);
 
   useEffect(() => {
-    if (keyPair) {
+    if (keyPair && keyPair.publicKey !== csrObject.publicKey) {
       const newCsrObject = Object.assign({}, csrObject);
       newCsrObject.publicKey = keyPair.publicKey;
       setCsrObject(newCsrObject);
     }
   }, [csrObject, keyPair]);
+
+  useEffect(() => {
+    if (csrObject.subject.attributes.length !== subjectAttributes.length) {
+      const newCsrObject = Object.assign({}, csrObject);
+      newCsrObject.subject.attributes = [];
+      for (let attribute of subjectAttributes) {
+        newCsrObject.subject.addField({
+          type: forge.pki.oids[attribute[0]],
+          value: attribute[1],
+        });
+      }
+      setCsrObject(newCsrObject);
+    }
+  }, [csrObject, subjectAttributes]);
+
+  const [newAttributeType, setNewAttributeType] = useState<string>("");
+  const [newAttributeValue, setNewAttributeValue] = useState<string>("");
+  const selectableAttributes = [
+    "commonName",
+    "countryName",
+    "localityName",
+    "stateOrProvinceName",
+    "organizationName",
+    "organizationalUnitName",
+    "emailAddress",
+  ];
 
   return (
     <>
@@ -72,23 +106,18 @@ function GenerateCsr() {
                 <div className="col">
                   {keyPairOption === "generate" && (
                     <>
-                      <Dropdown
-                        header={"RSA key size"}
-                        alwaysClose={true}
-                        onClose={(e: any) => {
-                          const newValue = parseInt(
-                            e.target.getAttribute("data-key-size")
-                          );
-                          setDesiredKeyPairSize(newValue);
-                        }}
-                      >
-                        {["512", "768", "1024", "2048", "4096"].map(
-                          (value, index) => (
-                            <DropdownElement key={index} data-key-size={value}>
-                              {value}
-                            </DropdownElement>
-                          )
-                        )}
+                      <Dropdown header={"RSA key size"} alwaysClose={true}>
+                        {[512, 768, 1024, 2048, 4096].map((value, index) => (
+                          <DropdownElement
+                            key={index}
+                            data-key-size={value}
+                            onClick={() => {
+                              setDesiredKeyPairSize(value);
+                            }}
+                          >
+                            {value}
+                          </DropdownElement>
+                        ))}
                       </Dropdown>
                     </>
                   )}
@@ -101,6 +130,95 @@ function GenerateCsr() {
                   {keyPair && (
                     <RSAPrivateKey keyPair={keyPair.privateKey}></RSAPrivateKey>
                   )}
+                </div>
+              </div>
+            </Panel>
+            <Panel raised={true} className="qtr-margin-top">
+              <div className="row">
+                <div className="col">
+                  <h4>Subject Information</h4>
+                  <table>
+                    <thead></thead>
+                    <tbody>
+                      {subjectAttributes.map((attr, index: number) => {
+                        return (
+                          <tr key={index}>
+                            <td>
+                              <span className="qtr-margin-left">{attr[0]}</span>
+                            </td>
+                            <td>{attr[1]}</td>
+                            <td>
+                              <Icon
+                                icon="delete"
+                                onClick={() => {
+                                  console.log("ccc");
+                                  const newAttributes = [...subjectAttributes];
+                                  newAttributes.splice(index, 1);
+                                  setSubjectAttributes(newAttributes);
+                                }}
+                              ></Icon>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                      <tr>
+                        <td>
+                          <EditableSelect
+                            displayValues={true}
+                            multiple={false}
+                            inline={true}
+                            options={selectableAttributes.map(
+                              (attributeName) => {
+                                return {
+                                  label: attributeName,
+                                  value: attributeName,
+                                };
+                              }
+                            )}
+                            value={newAttributeType}
+                            onChange={(value) => {
+                              setNewAttributeType(value);
+                            }}
+                          ></EditableSelect>
+                        </td>
+                        <td>
+                          <Input
+                            value={newAttributeValue}
+                            onKeyUp={(
+                              event: React.KeyboardEvent<HTMLInputElement>
+                            ) => {
+                              setNewAttributeValue(
+                                (event.target as HTMLInputElement).value
+                              );
+                            }}
+                            onChange={(
+                              event: React.ChangeEvent<HTMLInputElement>
+                            ) => {
+                              setNewAttributeValue(event.target.value);
+                            }}
+                            size={50}
+                          ></Input>
+                        </td>
+                        <td>
+                          <Icon
+                            icon="plus"
+                            onClick={() => {
+                              if (newAttributeType && newAttributeValue) {
+                                const newAttributes = [...subjectAttributes];
+                                newAttributes.push([
+                                  newAttributeType,
+                                  newAttributeValue,
+                                ]);
+                                setSubjectAttributes(newAttributes);
+                                setNewAttributeType("");
+                                setNewAttributeValue("");
+                              }
+                            }}
+                          ></Icon>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
                 </div>
               </div>
             </Panel>
