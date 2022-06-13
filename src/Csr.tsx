@@ -1,13 +1,6 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 
-import {
-  Panel,
-  Input,
-  Radios,
-  Dropdown,
-  DropdownElement,
-  Menu,
-} from "@vkumov/react-cui-2.0";
+import { Panel } from "@vkumov/react-cui-2.0";
 import { Buffer } from "buffer";
 
 import * as forge from "node-forge";
@@ -63,11 +56,21 @@ function Csr(props: ICsr) {
 
   let signature = "";
   if (csr?.signature) {
-    signature = prettyHexString(
-      Buffer.from(csr.signature).toString("hex").toUpperCase(),
-      25
-    );
+    try {
+      for (let i = 0; i < csr.signature.length; i++) {
+        const x = csr.signature.charCodeAt(i).toString(16).toUpperCase();
+        signature += x.length === 2 ? x : "0" + x;
+      }
+      signature = prettyHexString(signature, 18);
+    } catch (error: any) {
+      console.log(error);
+    }
   }
+
+  let signatureAlgorithm = "";
+  try {
+    signatureAlgorithm = forge.pki.oids[csr.signatureOid];
+  } catch (error) {}
 
   let csrPem: string;
   try {
@@ -101,7 +104,7 @@ function Csr(props: ICsr) {
               </span>
             </li>
             <li>
-              <span>Signature Algorithm: </span>
+              <span>Signature Algorithm: {signatureAlgorithm}</span>
               <pre className="qtr-margin-left">{signature}</pre>
             </li>
           </ul>
