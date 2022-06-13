@@ -20,7 +20,7 @@ function App() {
     { name: "View CSR", component: <ViewCsr></ViewCsr> },
     { name: "Build CSR", component: <GenerateCsr></GenerateCsr> },
   ];
-  const [currentTab, setCurrentTab] = useState<string>(tabs[4].name);
+  const [currentTab, setCurrentTab] = useState<string>(tabs[0].name);
 
   return (
     <div>
