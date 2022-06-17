@@ -80,25 +80,30 @@ function BuildPkcs12() {
 
   const validChain = certArray.map(
     (certObj: forge.pki.Certificate | undefined, index: number): string => {
-      const cArray = certArray.slice(0, index + 1);
-      if (index > 0) {
-        if (cArray[index]) {
+      const chain = certArray.slice(index);
+      const anyMissingInfo = chain.some((c) => c === undefined);
+      if (chain.length > 1) {
+        if (certArray[index] && !anyMissingInfo) {
           const caStore = forge.pki.createCaStore();
-          caStore.addCertificate(cArray[index] as forge.pki.Certificate);
+          caStore.addCertificate(
+            chain[chain.length - 1] as forge.pki.Certificate
+          );
           try {
             forge.pki.verifyCertificateChain(
               caStore,
-              cArray.slice().reverse().slice(1) as forge.pki.Certificate[]
+              chain as forge.pki.Certificate[]
             );
             return "";
           } catch (error: any) {
             return error.message;
           }
         } else {
-          return "Missing Certificate";
+          return certArray[index] === undefined
+            ? "Missing Certificate"
+            : "Chain Incomplete";
         }
       } else {
-        return "";
+        return certArray[index] === undefined ? "Missing Certificate" : "";
       }
     }
   );
@@ -115,8 +120,6 @@ function BuildPkcs12() {
       certArray as forge.pki.Certificate[]
     );
   }
-
-  console.log(certArray);
 
   return (
     <>
