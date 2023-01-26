@@ -32,7 +32,7 @@ function ViewCert() {
           onFileLoad={onFileLoaded}
         ></InputFile>
         {certificateObject && (
-          <Cert certObj={certificateObject} displayPem={false}></Cert>
+          <Cert certObj={certificateObject} displayPem={true}></Cert>
         )}
       </Panel>
     </Panel>
