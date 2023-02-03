@@ -135,10 +135,49 @@ function CertificateExtensionSubjectAltName(
       <span>Subject Alternate Name:</span>
       <ul style={{ listStyleType: "none" }}>
         {props.altNames.map((altName, index) => {
+          const typeMap = new Map<number, string>([
+            [0, "Other Name"],
+            [1, "RFC 822 Name"],
+            [2, "DNS"],
+            [3, "x400 Address"],
+            [4, "Name"],
+            [5, "EDIPartyName"],
+            [6, "URI"],
+            [7, "IP Address"],
+            [8, "Registered ID"],
+          ]);
+          const type =
+            typeMap.get(altName.type) === undefined
+              ? "Unknown Type"
+              : typeMap.get(altName.type);
+          let value;
+          if (typeof altName.value === "string") {
+            value = altName.value;
+          } else {
+            switch (altName.type) {
+              case 0:
+                // This is OtherName.  We need to check the type-id to specifically decode it
+                if (
+                  (altName.value as { value: string }[])[0].value ===
+                  "+\u0006\u0001\u0004\u00017\u0014\u0002\u0003"
+                ) {
+                  // This is the hardcoded type-id of Microsoft's User Principal Name
+                  let innerValue: string = (
+                    altName.value as { value: { value: string }[] }[]
+                  )[1].value[0].value;
+                  value = `Microsoft User Principal Name - ${innerValue}`;
+                } else {
+                  value = "Unknown Other name type";
+                }
+                break;
+              default:
+                value = "????";
+            }
+          }
           return (
             <li key={index}>
               <span style={{ fontFamily: "monospace" }}>
-                {altName.type === 2 ? "DNS" : "?"}: {altName.value}
+                {type}: {value}
               </span>
             </li>
           );
