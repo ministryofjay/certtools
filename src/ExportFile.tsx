@@ -16,9 +16,9 @@ function ExportFile({ data, pemHeader }: IExportFile) {
   let pemOutput = "";
   if (exportType === "PEM") {
     const pemDump = forge.util.encode64(data, 60);
-    pemOutput = `----- BEGIN ${pemHeader || pemHeaderSelection} -----
+    pemOutput = `-----BEGIN ${pemHeader || pemHeaderSelection}-----
 ${pemDump}
------ END ${pemHeader || pemHeaderSelection} -----`;
+-----END ${pemHeader || pemHeaderSelection}-----`;
   }
 
   return (
